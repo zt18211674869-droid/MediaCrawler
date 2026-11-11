@@ -14,10 +14,10 @@
 ## 从这里开始
 
 - [GUAIKEI 社媒 MCP 说明](docs/mcp/guaikei/README.md)
-- [GUAIKEI 客户端安装与配置指南（HTML）](docs/mcp/guaikei/index.html)
+- [GUAIKEI 客户端安装与配置指南（在线阅读）](https://zt18211674869-droid.github.io/MediaCrawler/mcp/guaikei/)
 - [协作说明](CONTRIBUTING.md)
 
-HTML 指南可以下载后用浏览器打开。技能、脚本和案例会按实际内容逐步加入。
+指南可以直接在线阅读，也可以下载 HTML 后用浏览器打开。技能、脚本和案例会按实际内容逐步加入。
 
 ## 分支约定
 

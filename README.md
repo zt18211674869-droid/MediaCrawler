@@ -13,7 +13,7 @@
 
 ## 从这里开始
 
-- [GUAIKEI 社媒 MCP 说明](docs/mcp/guaikei/README.md)
+- [GUAIKEI 社媒 MCP 说明（可获取的数据）](docs/mcp/guaikei/README.md)
 - [GUAIKEI 客户端安装与配置指南（在线阅读）](https://zt18211674869-droid.github.io/MediaCrawler/mcp/guaikei/)
 - [协作说明](CONTRIBUTING.md)
 

@@ -1,6 +1,6 @@
 {
   "skill": "social-voc-analysis",
-  "version": "2026.11.12.1",
+  "version": "2026.11.12.2",
   "external_access": {"provider": "guaikei", "transport": "mcp"},
   "contracts": {
     "research_plan": "research-spec-v1",

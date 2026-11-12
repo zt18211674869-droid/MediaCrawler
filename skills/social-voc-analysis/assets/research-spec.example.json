@@ -1,0 +1,163 @@
+{
+  "schema_version": "research-spec-v1",
+  "external_access": {
+    "provider": "guaikei",
+    "transport": "mcp"
+  },
+  "collection_mode": "offline",
+  "topic": "示例：社交材料体验研究",
+  "decision_questions": [
+    "本次材料反映哪些具体体验及成立条件？"
+  ],
+  "question_plan": [
+    {
+      "id": "Q1",
+      "question": "本次材料反映哪些具体体验及成立条件？",
+      "evidence_needed": "全部选定原文、来源性质、具体行为与正反表达",
+      "method": "逐来源资格判断、方面级观点提取、聚类与反例复核",
+      "completion_criteria": "问题逐项回应，主要发现回链原文，未处理与待核分别披露"
+    }
+  ],
+  "module_plan": [
+    {
+      "module": "opinions",
+      "selected": true,
+      "question_ids": [
+        "Q1"
+      ],
+      "reason": "保留一源多观点和逐条复核"
+    },
+    {
+      "module": "keywords",
+      "selected": false,
+      "question_ids": [
+        "Q1"
+      ],
+      "reason": "仅在词语分布有助回答问题时启用"
+    },
+    {
+      "module": "journey",
+      "selected": false,
+      "question_ids": [
+        "Q1"
+      ],
+      "reason": "仅在材料具备任务阶段依据时启用"
+    }
+  ],
+  "metric_definitions": [],
+  "keyword_plan": {
+    "enabled": null,
+    "extraction_method": null,
+    "dictionary_or_grouping_version": null,
+    "eligibility": "默认合格亲历自述；宣传、推荐、期待、咨询与背景材料分开",
+    "weight": "distinct_source_df",
+    "counting_unit": "source_unit",
+    "normalization_rules": [],
+    "stopword_rules": [],
+    "cloud_scale": null,
+    "note": "启用时填写实际方法、语料、归并与共同尺度；保存surface/label及观点来源回链。未执行不声称用了分词工具、微词云或TF-IDF。"
+  },
+  "journey_plan": {
+    "enabled": null,
+    "goal_and_scope": null,
+    "stages_basis": null,
+    "observed_metrics": [],
+    "proposed_validation_metrics": [],
+    "note": "汇总阶段、行为、关注点、触点、障碍/补救和有证据的情绪；综合模型标明来自多来源，未覆盖阶段未知，不虚构完成率或留存。"
+  },
+  "mode": "topic",
+  "platforms": [],
+  "input": {
+    "existing_data_paths": [],
+    "collection_run_id": null
+  },
+  "published_window": {
+    "content": {
+      "start": null,
+      "end": null
+    },
+    "comments": {
+      "start": null,
+      "end": null
+    },
+    "interpretation": "分别说明作品与评论窗口；未限制的一类填 null"
+  },
+  "timezone": "Asia/Shanghai",
+  "product_aliases": [],
+  "query_groups": {
+    "product": [],
+    "scenario": [],
+    "problem": [],
+    "positive": [],
+    "alternative": []
+  },
+  "sampling": {
+    "sorts": [],
+    "call_budget": null,
+    "detail_budget": null,
+    "comment_depth": null,
+    "stop_condition": "按本轮问题覆盖和实际预算填写"
+  },
+  "admission": {
+    "include": [],
+    "exclude": [],
+    "uncertain": []
+  },
+  "coding_version": "v1",
+  "counting": {
+    "primary_unit": "source_unit",
+    "secondary_tags_multi_label": true
+  },
+  "baseline_run_id": null,
+  "outputs": [
+    {
+      "path": "report.html",
+      "format": "html",
+      "bindings_required": true
+    }
+  ],
+  "limitations": [],
+  "intent": {
+    "user_purpose": null,
+    "understanding_basis": null,
+    "basis_note": null,
+    "unresolved_critical_questions": [],
+    "note": "understanding_basis 使用 explicit/inferred_clear/delegated/needs_clarification；关键问题未回答不当已确定目的"
+  },
+  "report_plan": {
+    "central_question": null,
+    "reader_takeaway": null,
+    "comparison_objects": [],
+    "comparison_dimensions": [],
+    "question_sequence": [],
+    "finding_sequence": [],
+    "statistic_placement": [],
+    "synthesis_note": "以研究发现组织正文，按解释需要结合关键统计、具体场景、原声与行为路径；statistic_placement记录统计ID、正文或完整统计入口及取舍理由，完整计算范围不随正文精简而缩小。不固定各类材料比例或每项发现的展示组件。",
+    "overview_reading_minutes": null,
+    "depth_basis": "总览便于快速了解，主体深度由主问题、证据和用户要求决定；整篇不设固定字数",
+    "views": [],
+    "filters": [],
+    "evidence_delivery": "browsable_source_context_with_csv_json_downloads",
+    "note": "采集前填问题与维度，结论在分析后形成；HTML分类报告将分析视图与产品/正负向/来源等筛选分开；outputs 按用户指定格式或阅读需要选择，不要求额外审批"
+  },
+  "continuity": {
+    "reused_runs": [],
+    "stable_preferences": [],
+    "changed_purpose_or_method": null,
+    "fact_check_as_of": null,
+    "note": "区分稳定方法、本轮设置、带日期与来源的历史发现；复用旧材料时保留原采集日，分析日期不能冒充重采日期"
+  },
+  "quantitative_plan": {
+    "mode": "case_exploration",
+    "mode_reason": "示例为案例解释；实际用户要求频次、占比或主导分布时改为sample_distribution并填写必需统计",
+    "questions": [],
+    "required_tables": [],
+    "classification_axes": [],
+    "eligibility_and_denominators": [],
+    "unknown_and_exclusion_policy": null,
+    "completion_criteria": [],
+    "note": "mode 使用 case_exploration 或 sample_distribution；用户需要频次、占比、主导分布时明确必需表及其 question_ids/axis_id、合格分母、分类规则、n/N、未知处理与复算验收，不固定表数或本次类别。"
+  },
+  "question_coverage": [],
+  "evidence_gaps": []
+}

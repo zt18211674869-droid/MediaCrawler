@@ -1,0 +1,4 @@
+interface:
+  display_name: "社交平台 VOC 分析"
+  short_description: "分析社媒观点、场景与行为，生成专业客观、层级清楚且数据和证据经过核验的研究报告。"
+  default_prompt: "使用 $social-voc-analysis，围绕我的问题形成专业客观的研究报告，以发现组织正文，结合关键统计、场景原声与行为解释，完整统计和证据可查并经过核验；独立完成分析，唯一外部调用为 guaikei MCP；离线材料直接分析，不通提示联系仓库维护者或 MCP 服务提供方。"

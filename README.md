@@ -17,6 +17,7 @@
 
 - [GUAIKEI 社媒 MCP 说明（可获取的数据）](docs/mcp/guaikei/README.md)
 - [GUAIKEI 客户端安装与配置指南（在线阅读）](https://zt18211674869-droid.github.io/MediaCrawler/mcp/guaikei/)
+- [social-voc-analysis 技能（安装与使用）](skills/README.md)
 - [协作说明](CONTRIBUTING.md)
 
 指南可以直接在线阅读，也可以下载 HTML 后用浏览器打开。技能、脚本和案例会按实际内容逐步加入。

@@ -1,0 +1,14 @@
+{
+  "skill": "social-voc-analysis",
+  "version": "2026.11.12.2",
+  "external_access": {"provider": "guaikei", "transport": "mcp"},
+  "contracts": {
+    "research_plan": "research-spec-v1",
+    "opinions": "opinions-v1",
+    "coverage": "coverage-review-v1",
+    "quantitative_plan": "quantitative-spec-v1",
+    "report_bindings": "report-bindings-v1",
+    "artifacts": "artifact-manifest-v1",
+    "quality_review": "quality-review-v1"
+  }
+}

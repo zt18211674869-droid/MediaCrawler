@@ -1,0 +1,4 @@
+interface:
+  display_name: "怪 K 双平台采集"
+  short_description: "按关键词采集抖音和小红书主帖、评论与作者资料，整理为 Excel"
+  default_prompt: "使用 $guaikei-collect 帮我配置抖音和小红书采集，先看关键词、时间和评论选项。"

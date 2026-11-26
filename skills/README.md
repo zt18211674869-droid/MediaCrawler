@@ -4,6 +4,7 @@
 
 | 技能 | 用途 | 使用条件 |
 | --- | --- | --- |
+| [怪 K 双平台采集 V1](guaikei-collect/SKILL.md) | 按关键词采集抖音和小红书公开主帖，按需补充评论、回复和作者资料，导出 Excel | 需要已连接的 GUAIKEI MCP |
 | [social-voc-analysis](social-voc-analysis/SKILL.md) | 分析社媒观点、场景与行为，开展舆情、竞品、需求与体验研究，生成证据可追溯的报告 | 支持本地材料离线分析；在线补采需要已连接的 GUAIKEI MCP |
 
 ## 安装 social-voc-analysis

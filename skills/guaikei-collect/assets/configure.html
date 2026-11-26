@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>怪 K · 采集配置</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font: 14px/1.5 "Inter", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+      color: #242830;
+      background: #eff2f7;
+      --blue: #075bef;
+      --muted: #606977;
+      --border: #d8dde5;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 2px solid #246ee8; outline-offset: 3px; }
+    .end-message { min-height: 100vh; margin: 0; display: grid; place-content: center; color: var(--muted); }
+    dialog {
+      width: min(660px, calc(100% - 32px));
+      max-width: none; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px);
+      padding: 0; border: 1px solid #d8e1ef; border-radius: 8px; color: inherit;
+      background: linear-gradient(180deg, #e3ecfc 0, #f2f6fd 100px, #fff 205px);
+      box-shadow: 0 12px 48px #20365026, 0 2px 8px #20365012;
+      overflow: auto; overscroll-behavior: contain;
+    }
+    dialog::backdrop { background: #dce3ed70; }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px 9px 18px; }
+    h1 { font-size: 16px; font-weight: 650; letter-spacing: .015em; margin: 0; }
+    .close {
+      appearance: none; display: grid; place-items: center; width: 30px; height: 30px;
+      background: transparent; border: 0; border-radius: 4px; color: #586170; font-size: 20px; line-height: 1;
+    }
+    .close:hover { color: #18243a; background: #d7e3f6; }
+    form { max-width: 448px; margin: 0 auto; padding: 16px 0 23px; }
+    fieldset { min-width: 0; border: 0; padding: 0; margin: 0 0 14px; }
+    legend, .field-label { display: block; padding: 0; margin-bottom: 6px; font-weight: 600; }
+    .required { color: #ca3644; margin-left: 3px; }
+    .hint, .scope { font-size: 12px; color: var(--muted); }
+    .hint { margin: 5px 0 0; }
+    textarea, input[type=number] { border: 1px solid var(--border); border-radius: 4px; background: white; color: inherit; }
+    textarea:hover, input[type=number]:not(:disabled):hover { border-color: #98adc9; }
+    textarea:focus, input[type=number]:focus { border-color: var(--blue); outline: 2px solid #075bef20; outline-offset: 0; }
+    textarea { width: 100%; min-height: 42px; padding: 9px 11px; display: block; resize: vertical; box-shadow: 0 2px 7px #1f3b6310; }
+    textarea::placeholder { color: #79818d; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .choice { display: inline-flex; position: relative; cursor: pointer; }
+    .choice input { position: absolute; inset: 0; height: 100%; width: 100%; margin: 0; opacity: 0; cursor: pointer; }
+    .choice span { min-height: 30px; min-width: 71px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 4px 11px; font-size: 13px; background: #f3f4f6; color: #444b56; border-radius: 4px; border: 1px solid transparent; }
+    .choice:hover span { background: #e9edf3; }
+    .choice input:checked + span { color: #0753cd; background: #e5eeff; border-color: #c5d9fe; font-weight: 600; }
+    .choice input:checked + span::before { content: ""; width: 8px; height: 4px; border-left: 1.7px solid; border-bottom: 1.7px solid; transform: translateY(-1px) rotate(-45deg); }
+    .choice input:focus-visible + span { outline: 2px solid var(--blue); outline-offset: 2px; }
+    .settings { overflow: hidden; border: 1px solid var(--border); border-radius: 5px; background: #fff; }
+    .setting { display: flex; justify-content: space-between; align-items: center; gap: 14px; min-height: 39px; padding: 5px 12px; font-size: 13px; }
+    .setting + .setting { border-top: 1px solid #e7e9ed; }
+    .switch { cursor: pointer; }
+    .switch input { appearance: none; flex: none; position: relative; width: 33px; height: 18px; margin: 0; border: 1px solid #a3abb6; border-radius: 12px; background: #a3abb6; cursor: pointer; }
+    .switch input::after { content: ""; display: block; width: 12px; height: 12px; margin: 2px; border-radius: 50%; background: white; }
+    .switch input:checked { background: var(--blue); border-color: var(--blue); }
+    .switch input:checked::after { transform: translateX(15px); }
+    .setting input[type=number] { width: 124px; padding: 3px 8px; min-height: 28px; }
+    input:disabled { color: #798290; background: #f3f4f6; }
+    .scope { margin: 10px 0 5px; line-height: 1.65; color: #34465e; }
+    .actions { display: flex; justify-content: center; margin-top: 17px; }
+    .primary { min-height: 36px; width: min(100%, 216px); color: #fff; font-weight: 600; background: var(--blue); border: 1px solid var(--blue); border-radius: 5px; }
+    .primary:hover { background: #004fd6; }
+    .feedback { margin: 6px 0; font-size: 13px; }
+    .feedback:empty { display: none; }
+    #error { color: #b32f36; }
+    button:disabled { opacity: .55; cursor: default; }
+    @media (max-width: 552px) {
+      dialog { width: calc(100% - 16px); max-height: calc(100dvh - 16px); }
+      form { width: auto; margin: 0 auto; padding: 10px 19px 19px; }
+      header { padding-left: 16px; }
+      .choice span { min-width: 0; padding: 5px 10px; }
+      .setting input[type=number] { width: 96px; }
+    }
+    @media (max-width: 340px) { .setting { gap: 6px; padding-inline: 8px; } }
+    @media (forced-colors: active) {
+      .choice span { border-color: ButtonBorder; }
+      .switch input { appearance: auto; width: 18px; }
+      .switch input::after { display: none; }
+    }
+  </style>
+</head>
+<body>
+<p class="end-message" id="closedMessage" role="status" hidden></p>
+<dialog id="panel" aria-labelledby="dialogTitle">
+  <header>
+    <h1 id="dialogTitle">创建采集任务</h1>
+    <button class="close" id="cancel" type="button" aria-label="关闭采集配置" title="关闭">×</button>
+  </header>
+  <form id="form">
+    <fieldset>
+      <label class="field-label" for="keywords">检索关键词<span class="required" aria-hidden="true">*</span></label>
+      <textarea id="keywords" rows="1" required aria-describedby="keywordHelp" placeholder="例如：星芒手机，osta o1 pro"></textarea>
+      <p id="keywordHelp" class="hint">用中英文逗号、顿号或换行分隔，词内空格保留。每词 2–50 字，分号请改为逗号。</p>
+    </fieldset>
+    <fieldset>
+      <legend>检索平台<span class="required" aria-hidden="true">*</span></legend>
+      <div class="chips">
+        <label class="choice"><input type="checkbox" name="platform" value="douyin" checked><span>抖音</span></label>
+        <label class="choice"><input type="checkbox" name="platform" value="xiaohongshu" checked><span>小红书</span></label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>主帖发布时间<span class="required" aria-hidden="true">*</span></legend>
+      <div class="chips">
+        <label class="choice"><input type="radio" name="days" value="1"><span>近一天</span></label>
+        <label class="choice"><input type="radio" name="days" value="7" checked><span>近一周</span></label>
+        <label class="choice"><input type="radio" name="days" value="15"><span>近半个月</span></label>
+        <label class="choice"><input type="radio" name="days" value="180"><span>近半年</span></label>
+      </div>
+      <p id="dateHelp" class="hint">按北京时间滚动计算主帖发布时间。</p>
+    </fieldset>
+    <fieldset>
+      <legend>采集设置</legend>
+      <div class="settings">
+        <label class="setting switch">获取主帖评论及回复<input id="comments" type="checkbox"></label>
+        <label class="setting switch">获取主帖作者主页<input id="authors" type="checkbox"></label>
+        <label class="setting">每组搜索的主帖上限<input id="searchLimit" type="number" min="1" max="5000" step="1" value="1000" required></label>
+        <label class="setting">每帖评论及回复上限<input id="commentLimit" type="number" min="1" max="5000" step="1" value="5000" required></label>
+        <label class="setting">同时执行的任务数<input id="concurrency" type="number" min="1" max="10" step="1" value="10" required></label>
+      </div>
+      <p class="hint">每个平台每个词搜一次，按最新排序。每组最多 5,000 篇，并发数可设 1–10。</p>
+      <p class="hint" id="commentHelp" hidden>评论和回复每帖合计最多 5,000 条。已知数量较少时按需获取，零条跳过，未知时使用所填上限。</p>
+    </fieldset>
+    <p class="scope" id="scope" aria-live="polite"></p>
+    <p class="hint" id="previewHint">静态预览。正式采集请从 Skill 打开。</p>
+    <p class="feedback" id="error" role="alert"></p>
+    <div class="actions">
+      <button class="primary" id="submit" type="submit">确认</button>
+    </div>
+  </form>
+</dialog>
+<script>
+  const byId = id => document.getElementById(id);
+  const form = byId("form");
+  const local = location.protocol === "http:" && location.hostname === "127.0.0.1" &&
+    /^\/[A-Za-z0-9_-]{32}\/$/.test(location.pathname);
+  const platforms = Array.from(form.querySelectorAll('[name="platform"]'));
+  const periods = Array.from(form.querySelectorAll('[name="days"]'));
+  const panel = byId("panel");
+  let finished = false;
+  let submitting = false;
+
+  function keywords() {
+    return Array.from(new Set(byId("keywords").value.split(/[,，、\n]+/).map(word => word.trim()).filter(Boolean)));
+  }
+
+  function update() {
+    const words = keywords();
+    const text = byId("keywords").value;
+    let keywordError = "";
+    if (/[;；]/.test(text)) keywordError = "请将分号改为逗号，或把每个关键词单独写一行。";
+    else if (!words.length) keywordError = "请至少输入一个关键词。";
+    else if (words.length > 100) keywordError = "一次最多输入 100 个关键词。";
+    else if (words.some(word => Array.from(word).length < 2 || Array.from(word).length > 50))
+      keywordError = "每个关键词须为 2 至 50 个字符。";
+    else if (words.some(word => /[a-z][a-z0-9+.-]*:\/\/|(?:^|\s)(?:www\.|\/\/)|(?:[a-z0-9-]+\.)+[a-z]{2,}(?=$|[/:?#\s])|[<>"'&]/i.test(word)))
+      keywordError = "关键词含链接或不支持的字符，请修改后再试。";
+    byId("keywords").setCustomValidity(keywordError);
+    const platformCount = platforms.filter(input => input.checked).length;
+    platforms[0].setCustomValidity(platformCount ? "" : "请至少勾选一个平台。");
+    byId("commentLimit").disabled = !byId("comments").checked;
+    byId("commentHelp").hidden = !byId("comments").checked;
+    byId("dateHelp").textContent = periods.find(input => input.checked)?.value === "15"
+      ? "平台先搜近半年，再按北京时间保留最近 15 天内发布的主帖。搜索触顶可能影响覆盖。"
+      : "按北京时间滚动计算主帖发布时间。";
+    const tasks = words.length * platformCount;
+    const limit = byId("searchLimit").valueAsNumber;
+    if (!tasks || keywordError || !byId("searchLimit").validity.valid || !byId("concurrency").validity.valid) {
+      byId("scope").textContent = "填好关键词、平台、搜索上限和并发数后，可查看本次请求量。";
+      return;
+    }
+    const posts = tasks * limit;
+    const count = value => value.toLocaleString("zh-CN");
+    const simultaneous = Math.min(tasks, byId("concurrency").valueAsNumber);
+    const platformNames = platforms.filter(input => input.checked).map(input => input.labels[0].textContent.trim());
+    const estimates = [platformNames.join("、") + "共 " + count(tasks) + " 组搜索，最多同时执行 " + count(simultaneous) +
+      " 组。每组最多 " + count(limit) + " 篇主帖，去重前合计最多 " + count(posts) + " 篇。"];
+    if (byId("comments").checked && byId("commentLimit").validity.valid) {
+      const comments = posts * byId("commentLimit").valueAsNumber;
+      estimates.push("评论最多另查 " + count(posts) + " 次，含回复最多 " + count(comments) + " 条。");
+    }
+    if (byId("authors").checked) estimates.push("作者主页最多另查 " + count(posts) + " 次。");
+    if (estimates.length > 1) estimates.push("实际补采量以按时间筛选、去重后的作品和作者为准。");
+    byId("scope").textContent = estimates.join(" ");
+  }
+
+  function config() {
+    update();
+    if (!form.reportValidity()) return null;
+    return {
+      keywords: byId("keywords").value.trim(),
+      platforms: platforms.filter(input => input.checked).map(input => input.value),
+      days: Number(periods.find(input => input.checked).value),
+      include_comments: byId("comments").checked,
+      include_authors: byId("authors").checked,
+      search_limit: byId("searchLimit").valueAsNumber,
+      comment_limit: byId("comments").checked ? byId("commentLimit").valueAsNumber : Number(byId("commentLimit").defaultValue),
+      concurrency: byId("concurrency").valueAsNumber
+    };
+  }
+
+  function prefill(value) {
+    if (typeof value.keywords === "string") byId("keywords").value = value.keywords;
+    if (Array.isArray(value.platforms)) platforms.forEach(input => { input.checked = value.platforms.includes(input.value); });
+    const period = periods.find(input => Number(input.value) === value.days);
+    if (period) period.checked = true;
+    for (const [key, id] of Object.entries({ include_comments: "comments", include_authors: "authors" })) {
+      if (typeof value[key] === "boolean") byId(id).checked = value[key];
+    }
+    for (const [key, id] of Object.entries({ search_limit: "searchLimit", comment_limit: "commentLimit", concurrency: "concurrency" })) {
+      if (typeof value[key] === "number") byId(id).value = value[key];
+    }
+    update();
+  }
+
+  function finish(message) {
+    finished = true;
+    panel.close();
+    byId("closedMessage").textContent = message;
+    byId("closedMessage").hidden = false;
+    if (local) window.close();
+  }
+
+  let ready = !local;
+  function lockForm(busy) {
+    for (const group of form.querySelectorAll("fieldset")) group.disabled = busy || !ready;
+    byId("submit").disabled = busy || !ready;
+    byId("cancel").disabled = busy;
+  }
+
+  async function complete(action, value) {
+    if (finished || submitting) return;
+    if (!local) {
+      finish(action === "confirm" ? "预览已结束。" : "已取消。");
+      return;
+    }
+    submitting = true;
+    lockForm(true);
+    try {
+      const options = { method: "POST" };
+      if (action === "confirm") {
+        options.headers = { "Content-Type": "application/json" };
+        options.body = JSON.stringify(value);
+      }
+      const response = await fetch(action, options);
+      const result = await response.json();
+      if (!response.ok || result.ok !== true) throw new Error(result.error || "请重试。");
+      finish(action === "confirm" ? "配置已交给 Skill。" : "本轮已取消。");
+    } catch (error) {
+      byId("error").textContent = error instanceof TypeError ? "本机连接中断，请重试。" : error.message;
+    } finally {
+      submitting = false;
+      if (!finished) lockForm(false);
+    }
+  }
+
+  byId("cancel").addEventListener("click", () => complete("cancel"));
+  panel.addEventListener("cancel", event => { event.preventDefault(); complete("cancel"); });
+  form.addEventListener("input", () => { byId("error").textContent = ""; update(); });
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    if (!ready || finished || submitting) return;
+    const value = config();
+    if (value) complete("confirm", value);
+  });
+
+  lockForm(false);
+  byId("previewHint").hidden = local;
+  panel.showModal();
+  if (local) {
+    fetch("prefill").then(async response => {
+      if (!response.ok) throw new Error();
+      const initial = await response.json();
+      if (finished) return;
+      prefill(initial);
+      ready = true;
+      lockForm(submitting);
+      update();
+    }).catch(() => { byId("error").textContent = "本机连接中断，请重新打开采集配置。"; });
+    window.addEventListener("pagehide", () => {
+      if (!finished && !submitting) navigator.sendBeacon("cancel", "");
+    });
+  }
+  update();
+</script>
+</body>
+</html>

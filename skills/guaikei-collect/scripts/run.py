@@ -9,9 +9,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID
 
+from author_evidence import nickname_evidence
 from excel_report import write_workbook
 from plan import MAX_CONCURRENCY, build_plan
-from records import author_record, comment_records, search_records, xhs_note_url
+from records import _author_id, comment_records, search_records, verified_author_record, xhs_note_url
 
 
 def dump(value):
@@ -92,10 +93,6 @@ def merge_post(db, platform, record, keyword):
 
 def materialize(db, job, data, plan):
     platform = job["tool"].split("_", 1)[0]
-    if job["kind"] == "author":
-        author = author_record(platform, job["target"], data)
-        store(db, "authors", platform, job["target"], author)
-        return {"authors": 1}
     if not isinstance(data, list):
         raise ValueError("结果缺少列表")
     if job["kind"] == "search":
@@ -143,8 +140,75 @@ def receipt_id(response):
         return None
 
 
+def checked_receipt(job, response):
+    returned = receipt_id(response)
+    request = response.get("request")
+    if (job["kind"] == "author" and job["receipt"] and isinstance(request, dict)
+            and "id" in request and returned != job["receipt"]):
+        raise ValueError("主页回包与原请求回执不一致")
+    return returned
+
+
 def raw_path(root, job):
     return root / "raw" / f"{job['id']:06d}-{job['attempt']}.json"
+
+
+def save_profile(db, root, job, result, attempt, names):
+    platform = job["tool"].split("_", 1)[0]
+    target = job["target"]
+    returned = checked_receipt(job, result)
+    original = returned
+    if attempt > 1:
+        try:
+            first = envelope(raw_path(root, {"id": job["id"], "attempt": 1}))
+        except (OSError, ValueError, TypeError, KeyError):
+            first = {}
+        original = receipt_id(first)
+        if original and returned and original != returned:
+            raise ValueError("主页回包与首次受理回执不一致")
+        if original and returned == original:
+            # A poll can return only the receipt. Reuse the original echoed arguments
+            # after checking any fields echoed by either response against this job.
+            first_request = first["request"]
+            current_request = result["request"]
+            for request in (first_request, current_request):
+                if ("command" in request and request["command"] != job["tool"]
+                        or "limit" in request and (type(request["limit"]) is not int or request["limit"] != 0)
+                        or any(_author_id(platform, request[key]) != target
+                               for key in ("url", "url_raw") if key in request)):
+                    raise ValueError("主页回执中的请求参数与原任务不一致")
+            result = {**result, "request": {**first_request, **current_request}}
+    author = verified_author_record(platform, target, result, original_args=json.loads(job["args"]),
+                                    original_receipt=original, nickname_source=names)
+    store(db, "authors", platform, target, author)
+    detail = {"authors": 1}
+    if "identity_source" in author:
+        detail.update(identity_source=author["identity_source"], profile_id=author["profile_id"])
+    return detail
+
+
+def recover_archived_profiles(db, root, plan):
+    if not plan["config"]["include_authors"] or "xiaohongshu" not in plan["config"]["platforms"]:
+        return
+    names = nickname_evidence(db, root, plan, envelope=envelope, raw_path=raw_path)
+    jobs = db.execute("""SELECT * FROM jobs WHERE state='needs_review' AND kind='author'
+                         AND tool='xiaohongshu_post' AND length(target)=29 ORDER BY id""")
+    for job in jobs:
+        detail = json.loads(job["detail"]) if job["detail"] else {}
+        if detail.get("reason") != "主页回包无法核实为请求的账号":
+            continue
+        for attempt in range(1, job["attempt"] + 1):
+            try:
+                result = envelope(raw_path(root, {"id": job["id"], "attempt": attempt}))
+                if result.get("status") != "success" or str(result.get("error_code") or "").upper() not in ("", "OK", "0"):
+                    continue
+                detail = save_profile(db, root, job, result, attempt, names)
+            except (OSError, ValueError, KeyError, TypeError, OverflowError):
+                continue
+            detail["raw_attempt"] = attempt
+            db.execute("UPDATE jobs SET state='done', detail=?, receipt=? WHERE id=?",
+                       (dump(detail), receipt_id(result) or job["receipt"], job["id"]))
+            break
 
 
 def upgrade_note_links(db, root, plan):
@@ -196,7 +260,8 @@ def upgrade_note_links(db, root, plan):
 
 
 def reconcile(db, root, plan):
-    for job in db.execute("SELECT * FROM jobs WHERE state='issued' ORDER BY id").fetchall():
+    names = nickname_evidence(db, root, plan, envelope=envelope, raw_path=raw_path)
+    for job in db.execute("SELECT * FROM jobs WHERE state='issued' ORDER BY (kind='author'),id").fetchall():
         path = raw_path(root, job)
         if not path.is_file():
             continue
@@ -205,9 +270,12 @@ def reconcile(db, root, plan):
         try:
             result = envelope(path)
             code = str(result.get("error_code") or "").upper()
-            receipt = receipt_id(result) or receipt
+            receipt = checked_receipt(job, result) or receipt
             if result.get("status") == "success" and code in ("", "OK", "0"):
-                detail = materialize(db, job, result.get("results"), plan)
+                if job["kind"] == "author":
+                    detail = save_profile(db, root, job, result, job["attempt"], names)
+                else:
+                    detail = materialize(db, job, result.get("results"), plan)
                 state = "done"
             else:
                 detail = {"error_code": code or "UNKNOWN"}
@@ -277,6 +345,7 @@ def claim(db, root, plan):
 
 def export(db, root, plan):
     upgrade_note_links(db, root, plan)
+    recover_archived_profiles(db, root, plan)
     counts = {}
     config = plan["config"]
     platforms = {name: dict.fromkeys(("posts", "comments", "replies", "authors",
@@ -305,7 +374,8 @@ def export(db, root, plan):
             job = dict(row)
             job["args"] = json.loads(job["args"])
             job["detail"] = json.loads(job["detail"]) if job["detail"] else None
-            job["raw"] = str(raw_path(root, job).relative_to(root)) if job["attempt"] else None
+            source_attempt = (job["detail"] or {}).get("raw_attempt", job["attempt"])
+            job["raw"] = str(raw_path(root, {**job, "attempt": source_attempt}).relative_to(root)) if source_attempt else None
             output.write(dump(job) + "\n")
             if job["state"] != "done":
                 issues[job["kind"]] += 1

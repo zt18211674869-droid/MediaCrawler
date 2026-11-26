@@ -4,6 +4,7 @@ import re
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from urllib.parse import parse_qs, quote, urlencode, urlsplit
+from uuid import UUID
 
 
 BEIJING = timezone(timedelta(hours=8))
@@ -184,6 +185,7 @@ def comment_records(platform, post_id, rows, limit):
     douyin = platform == "douyin"
     child_key = "reply_comment" if douyin else "sub_comments"
     records = {}
+    comment_accounts = {}
     missing = 0
     duplicates = 0
     stack = [(row, None, None, 0) for row in reversed(rows)]
@@ -206,6 +208,8 @@ def comment_records(platform, post_id, rows, limit):
                 "like_count": _count(row.get("digg_count" if douyin else "like_count")),
                 "reported_replies": _count(row.get("reply_comment_total" if douyin else "sub_comment_count")),
             }
+            if not douyin and (locator := _author_id(platform, user.get("user_id"))):
+                comment_accounts.setdefault(cid, {}).setdefault(locator, set()).add(record["author_name"])
             if cid in records:
                 duplicates += 1
                 prior = records[cid]
@@ -223,6 +227,14 @@ def comment_records(platform, post_id, rows, limit):
             stack.extend((child, cid, root, depth + 1) for child in reversed(children))
 
     selected = list(records.values())[:limit]
+    if not douyin:
+        for record in selected:
+            record["author_id"] = None
+            accounts = comment_accounts.get(record["comment_id"], {})
+            if len(accounts) == 1 and record["author_name"]:
+                locator, names = next(iter(accounts.items()))
+                if record["author_name"] in names:
+                    record["author_id"] = locator
     top = [row for row in selected if row["depth"] == 0]
     replies = Counter(row["root_id"] for row in selected if row["depth"] > 0)
     gaps = [max(0, row["reported_replies"] - replies[row["comment_id"]]) for row in top if row["reported_replies"] is not None]
@@ -262,3 +274,45 @@ def author_record(platform, locator, results):
     if not any(value is not None for value in fields.values()):
         raise ValueError("账号资料缺少可保存的字段")
     return {"platform": platform, "author_id": target, **fields}
+
+
+def _same_receipt(original, returned):
+    try:
+        return UUID(str(original)) == UUID(str(returned))
+    except ValueError:
+        return False
+
+
+def verified_author_record(platform, locator, envelope, *, original_args, original_receipt, nickname_source):
+    """Resolve a 29-character XHS alias only against the original request and a bound nickname."""
+    envelope = _mapping(envelope)
+    results = envelope.get("results")
+    try:
+        return author_record(platform, locator, results)
+    except ValueError:
+        if platform != "xiaohongshu" or not isinstance(locator, str) or not re.fullmatch(r"[A-Za-z0-9_-]{29}", locator):
+            raise
+        if envelope.get("status") != "success" or str(envelope.get("error_code") or "").upper() not in ("", "OK", "0"):
+            raise
+        request = _mapping(envelope.get("request"))
+        if (request.get("command") != "xiaohongshu_post" or not _same_receipt(original_receipt, request.get("id"))
+                or set(_mapping(original_args)) != {"url", "limit"}):
+            raise
+        for args in (original_args, request):
+            if (type(args.get("limit")) is not int or args["limit"] != 0
+                    or _author_id(platform, args.get("url")) != locator):
+                raise
+        if "url_raw" in request and _author_id(platform, request["url_raw"]) != locator:
+            raise
+
+        user = _mapping(_mapping(results).get("user"))
+        link = re.fullmatch(r"/user/profile/([a-fA-F0-9]{24})", _url_path(platform, user.get("share_link")))
+        nickname = _text(user.get("nickname"))
+        if user.get("user_id") not in (None, "") or not link or not nickname:
+            raise
+        source = nickname_source(locator, nickname)
+        if not source:
+            raise
+        profile_id = link[1]
+        fields = author_record(platform, profile_id, results)
+        return {**fields, "author_id": locator, "profile_id": profile_id, "identity_source": source}
